@@ -6,6 +6,22 @@ class Admin::ContentController < Admin::BaseController
 
   cache_sweeper :blog_sweeper
 
+  def merge
+    unless (current_user.admin?)
+      redirect_to :action => 'index'
+      flash[:error] = _("Sorry, admin only")
+      return
+    end
+    current_article = Article.find_by_id(params[:current_article_id])
+    has_merged = current_article && current_article.merge_with(params[:merge_with])
+    if has_merged
+      flash[:notice] = _("Article successfully merged.")
+    else
+      flash[:error] = _("Sorry, the article does not exist.")
+    end
+    redirect_to :action => '/admin/content'
+  end
+
   def auto_complete_for_article_keywords
     @items = Tag.find_with_char params[:article][:keywords].strip
     render :inline => "<%= raw auto_complete_result @items, 'name' %>"

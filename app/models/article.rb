@@ -71,6 +71,19 @@ class Article < Content
     end
   end
 
+  def merge_with(other_id)
+      other = Article.find_by_id other_id
+      if other && (other != self.id)
+        Article.update(self.id, {:body => (self.body + other.body)})
+        other.comments.each do |comment|
+          self.comments << comment
+        end
+        Article.delete(other_id)
+        return true
+      end
+      return false
+    end
+
   def set_permalink
     return if self.state == 'draft'
     self.permalink = self.title.to_permalink if self.permalink.nil? or self.permalink.empty?
@@ -95,6 +108,7 @@ class Article < Content
   include Article::States
 
   class << self
+            
     def last_draft(article_id)
       article = Article.find(article_id)
       while article.has_child?
